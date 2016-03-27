@@ -1,0 +1,27 @@
+{
+    "manifest_version": 2,
+    "name": "FB2Email",
+    "version": "1.0",
+    "description": "Convert Facebook posts to readable format in e-mail.",
+    "icons": {
+        "128": "icon128.png"
+    },
+    "page_action": {
+        "default_title": "Convert Facebook Post",
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "scripts": ["eventPage.js"],
+        "persistent": false
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://www.facebook.com/*"],
+            "js": ["jquery.min.1.7.js", "fb_post_script.js"]
+        }
+    ],
+    "permissions": [
+        "activeTab",
+        "tabs"
+    ]
+}

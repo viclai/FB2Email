@@ -1,6 +1,6 @@
 # Synopsis
 
-*FB2Email* is a personal side project in development which creates a Google Chrome extension that enables the user to convert Facebook posts to a format that is readable and more applicable to e-mail. 
+*FB2Email* is a personal side project in development which creates a Google Chrome extension that enables the user to convert Facebook posts to a format that is readable and more applicable for e-mail. 
 
 ![screenshot](hub/screenshot.gif "FB2Email")
 

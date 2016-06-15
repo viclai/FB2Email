@@ -26,7 +26,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         poster: name,
         date: timestamp
     };
-    fetchPost(response); // TODO: Send content
+    var res = fetchPost(response);
+    sendResponse(res);
 });
 
 function fetchPost(oPost) {
@@ -37,10 +38,14 @@ function fetchPost(oPost) {
     var dateSelector = "abbr[title='" + oPost.date + "']";
     var div = $(divSelector);
     var divContent = div.find("div.userContent");
+    var res = {
+        isValid: false,
+        content: ""
+    };
 
     if (div.length == 0) {
         console.log("Post not found");
-        return; // TODO: Return, indicating post is not found
+        return res; // Return, indicating post is not found
     }
     
     if (div.length > 1) { // More than 1 post under the same name
@@ -52,12 +57,15 @@ function fetchPost(oPost) {
         // Use selector on timestamp to ensure post is right
         if (div.find(dateSelector).length != 1) {
             console.log("Post not found");
-            return; // TODO: Return, indicating post is not found
+            return res; // Return, indicating post is not found
         }
     }
-    console.log("Post found!");
 
+    console.log("Post found!");
+    res.isValid = true;
+    res.content = divContent.text();
     console.log("Content:\n" + divContent.text());
+    return res; // Return post content
 }
 
 function monthInt2Text(index) {

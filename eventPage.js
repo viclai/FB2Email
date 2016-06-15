@@ -5,28 +5,38 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 });
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    var text;
+	console.log("runtime.onMessage triggered");
+	var res;
 
     if (message.fb_page) {
         chrome.pageAction.show(selectedId);
-    }
-    else if (message.post_name != "" || message.timestamp != "") {
+        return;
+    } else if (message.post_name != "" || message.timestamp != "") {
         chrome.tabs.query(
-            {active: true, currentWindow: true}, function(tabs) {
-            chrome.tabs.sendMessage(
-                tabs[0].id,
-                {name: message.post_name, timestamp: message.timestamp},
-                function(response) {
-                // TODO: Parse 'response' and place in 'text'
-            });
-        });
-        // TODO: Place text in 'sendResponse'
-        sendResponse("Received name and timestamp of FB post!");
+            {active: true, currentWindow: true},
+            function(tabs) {
+            	console.log("Number of valid tabs: " + tabs.length);
+            	chrome.tabs.sendMessage(
+                	tabs[0].id,
+                	{name: message.post_name, timestamp: message.timestamp},
+                	function(response) {
+                		if (chrome.runtime.lastError) {
+							console.log("ERROR: " + 
+								chrome.runtime.lastError.message);
+                		} else {
+                			sendResponse(response);
+                		}
+                	}
+            	);
+            }
+        );
     }
+    return true;
 });
 
 chrome.tabs.onActivated.addListener(function(activeInfo) {
     selectedId = activeInfo.tabId;
+    console.log("New tab ID: " + selectedId);
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {

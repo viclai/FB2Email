@@ -1,7 +1,3 @@
-chrome.runtime.sendMessage({fb_page: true}, function(response) {
-    console.log("fb_post_script executed!");
-});
-
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     var name = message.name;
 
@@ -22,50 +18,70 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     timestamp = day + ", " + month + " " + date + ", " + year + " at " +
         hour + ":" + minute + meridian;
 
+    var res = {
+        isValid: false,
+        content: "",
+        time: timestamp
+    };
+
     var response = {
         poster: name,
         date: timestamp
     };
-    var res = fetchPost(response);
+    var postData = fetchPost(response);
+    res.isValid = postData.isValid;
+    res.content = postData.content;
     sendResponse(res);
 });
 
 function fetchPost(oPost) {
+    var i;
     var content, container;
     var divSelector =
         "div.userContentWrapper:has(\"span a:contains('" + oPost.poster +
         "')\")";
-    var dateSelector = "abbr[title='" + oPost.date + "']";
     var div = $(divSelector);
     var divContent = div.find("div.userContent");
+    var dateSelector = "abbr[title='" + oPost.date + "']";
     var res = {
         isValid: false,
         content: ""
     };
 
     if (div.length == 0) {
-        console.log("Post not found");
-        return res; // Return, indicating post is not found
+        console.log("Post not found: no such post author exists");
+        return res;
     }
     
     if (div.length > 1) { // More than 1 post under the same name
-        console.log("More than 1");
-        for (var i = 0; i < div.length; i++) {
-            
+        console.log(div.length + " posts from same author: " +
+            "finding by date...");
+        for (i = 0; i < div.length; i++) {
+            var curDiv = div.get(i);
+            if (curDiv.querySelectorAll(dateSelector).length == 1) {
+                divContent = curDiv.querySelectorAll("div.userContent");
+                break;
+            }
         }
+        if (i == div.length) {
+            console.log("Post not found: date does not match");
+            return res;
+        }
+        for (i = 0; i < divContent.length; i++)
+            res.content += divContent[i].textContent;
     } else {
         // Use selector on timestamp to ensure post is right
         if (div.find(dateSelector).length != 1) {
-            console.log("Post not found");
-            return res; // Return, indicating post is not found
+            console.log("Post not found: date does not match");
+            return res;
         }
+        res.content = divContent.text();
     }
 
     console.log("Post found!");
     res.isValid = true;
-    res.content = divContent.text();
-    console.log("Content:\n" + divContent.text());
-    return res; // Return post content
+    console.log("Content:\n" + res.content);
+    return res;
 }
 
 function monthInt2Text(index) {
@@ -100,4 +116,5 @@ function dayInt2Text(index) {
 }
 
 // TODO: Modify Facebook pages to have interactive popup or button to allow 
-// users to instantly convert Facebook posts to readable format in e-mail.
+//       users to instantly convert Facebook posts to readable format in 
+//       e-mail.

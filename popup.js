@@ -1,4 +1,7 @@
 window.onload = function() {
+    $("#authorIn .ast").hide();
+    $("#timeIn .ast").hide();
+
     document.getElementById("convertButton").onclick = function() {
         var name = document.getElementById("poster").value;
         var time = document.getElementById("timeofPost").value;
@@ -9,11 +12,46 @@ window.onload = function() {
         chrome.runtime.sendMessage(
             {post_name: name, timestamp: time}, function(response) {
             if (response.isValid) {
-                document.getElementById("result").innerHTML = response.content;
+                document.getElementById("result").innerHTML =
+                    "<span id=\"instrs\">Copy and paste the following into " +
+                    "your e-mail!</span><br /> <br />" +
+                    "On " + response.time + ", <b>" + name + 
+                    "</b> wrote:<br /><br />" + response.content;
+
+                $("#result").css("color", "initial");
+                $("#poster").css("border-color", "initial");
+                $("#timeofPost").css("border-color", "initial");
+                $("#authorIn .ast").hide();
+                $("#timeIn .ast").hide();
             }
             else {
-                document.getElementById("result").innerHTML =
-                    "<b>Not found</b>";
+                $("#result").css("color", "initial");
+                $("#poster").css("border-color", "initial");
+                $("#timeofPost").css("border-color", "initial");
+
+                if (response.content == "") {
+                    document.getElementById("result").innerHTML =
+                        "<b>Post Not Found</b>";
+                } else { // User did not enter at least one of the fields
+                    document.getElementById("result").innerHTML =
+                        "<b>" + response.content + "</b>";
+                    if ($("#poster").val() == "") {
+                        $("#poster").css("border-color", "red");
+                        $("#authorIn .ast").show();
+                    } else {
+                        $("#poster").css("border-color", "initial");
+                        $("#authorIn .ast").hide();
+                    }
+
+                    if ($("#timeofPost").val() == "") {
+                        $("#timeofPost").css("border-color", "red");
+                        $("#timeIn .ast").show();
+                    } else {
+                        $("#timeofPost").css("border-color", "initial");
+                        $("#timeIn .ast").hide();
+                    }
+                    $("#result").css("color", "red");
+                }
             }
         });
     }

@@ -2,3 +2,11 @@ html, body {
     height: 500px;
     width: 450px;
 }
+
+#instrs {
+	font-family: "Arial Black", Gadget, sans-serif;
+}
+
+.ast {
+	color: red;
+}

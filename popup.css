@@ -7,6 +7,10 @@ html, body {
 	font-family: "Arial Black", Gadget, sans-serif;
 }
 
-.ast {
+.error {
 	color: red;
+}
+
+#buttonContainer {
+	padding-top: 10px;
 }

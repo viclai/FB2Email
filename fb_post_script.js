@@ -49,6 +49,7 @@ function fetchPost(oPost) {
     };
 
     if (div.length == 0) {
+        res.content = "Post not found: no such post author exists";
         console.log("Post not found: no such post author exists");
         return res;
     }
@@ -64,6 +65,7 @@ function fetchPost(oPost) {
             }
         }
         if (i == div.length) {
+            res.content = "Post not found: date does not match";
             console.log("Post not found: date does not match");
             return res;
         }
@@ -72,6 +74,7 @@ function fetchPost(oPost) {
     } else {
         // Use selector on timestamp to ensure post is right
         if (div.find(dateSelector).length != 1) {
+            res.content = "Post not found: date does not match";
             console.log("Post not found: date does not match");
             return res;
         }

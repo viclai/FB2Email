@@ -6,11 +6,11 @@ window.onload = function() {
         var name = document.getElementById("poster").value;
         var time = document.getElementById("timeofPost").value;
         // Format:
-        // 2001-01-01T08:19 
+        // 2001-01-01T08:19
         // 2001-01-01T20:19
 
         chrome.runtime.sendMessage(
-            {post_name: name, timestamp: time}, function(response) {
+            {type: "convert", post_name: name, timestamp: time}, function(response) {
             if (response.isValid) {
                 console.log("Got message back to display in extension.\n" +
                     "Response: " + response.time + " " + response.content);

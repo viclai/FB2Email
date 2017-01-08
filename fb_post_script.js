@@ -1,6 +1,152 @@
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    var name = message.name;
+createModal();
+$("#fb2email_blackout").hide();
+$("#fb2email_result_box").hide();
 
+setInterval(function() {
+    addConvertButtons();
+}, 2000);
+
+function createModal() {
+    var blackout = document.createElement("div");
+    var result_box = document.createElement("div");
+    var instr = document.createElement("div");
+    var br = document.createElement("br");
+    var res = document.createElement("div");
+
+    blackout.id = "fb2email_blackout";
+    blackout.style.position = "fixed";
+    blackout.style.zIndex = 9990;
+    document.body.appendChild(blackout);
+    $("#fb2email_blackout").css("background", "#000");
+    $("#fb2email_blackout").css("width", "104%");
+    $("#fb2email_blackout").css("height", "107%");
+    $("#fb2email_blackout").css("opacity", ".3");
+    $("#fb2email_blackout").css("top", "-14px");
+    $("#fb2email_blackout").css("left", "-29px");
+    
+    result_box.id = "fb2email_result_box";
+    result_box.style.position = "fixed";
+    result_box.style.zIndex = 9999;
+
+    instr.id = "fb2email_instr";
+    instr.innerHTML = "<b>Copy and paste the following into your e-mail!</b>";
+    result_box.appendChild(instr);
+
+    result_box.appendChild(br);
+
+    res.id = "fb2email_res";
+    result_box.appendChild(res);
+
+    document.body.appendChild(result_box);
+
+    $("#fb2email_result_box").css("width", "600px");
+    $("#fb2email_result_box").css("height", "180px");
+    $("#fb2email_result_box").css("background", "#E0F3FF");
+    $("#fb2email_result_box").css("left", "50%");
+    $("#fb2email_result_box").css("top", "50%");
+    $("#fb2email_result_box").css("border-radius", "5px");
+    $("#fb2email_result_box").css("padding", "20px 20px");
+    $("#fb2email_result_box").css("margin-left", "-320px"); /* width/2 + padding-left */
+    $("#fb2email_result_box").css("margin-top", "-150px"); /* height/2 + padding-top */
+    $("#fb2email_result_box").css("box-shadow", "0 0 10px 0 #000");
+    $("#fb2email_result_box").css("overflow-y", "auto");
+}
+
+function showModal() {
+    $("#fb2email_blackout").show();
+    $("#fb2email_result_box").show();
+
+    $("#fb2email_blackout").click(function() {
+        hideModal();
+    });
+
+    $(document).keyup(function(e) {
+         if (e.keyCode == 27) { // ESC
+            hideModal();
+        }
+    });
+}
+
+function hideModal() {
+    $("#fb2email_blackout").fadeOut();
+    $("#fb2email_result_box").fadeOut();
+    $("#fb2email_res").html("");
+}
+
+function addConvertButtons() {
+    var divs = $("div.userContentWrapper");
+    var i;
+    var next;
+    var content;
+    var contentWrapper;
+    var author;
+    var timestamp;
+    var but;
+    var button;
+
+    for (i = 0; i < divs.length; i++) {
+        next = divs[i].querySelector("span.timestampContent");
+        if (next != null) {
+            but = next.closest("div");
+            if (but != null && but.lastChild != null && but.lastChild.nodeName == "BUTTON") {
+                continue;
+            }
+
+            contentWrapper = next.closest("div.userContentWrapper");
+            if (contentWrapper != null) {
+                content = contentWrapper.querySelector("div.userContent");
+                if (content != null) {
+                    content = content.innerHTML;
+                } else {
+                    content = "";
+                }
+            } else {
+                content = "";
+            }
+
+            if (contentWrapper != null) {
+                author = contentWrapper.querySelector("span a");
+                if (author != null) {
+                    author = author.innerHTML;
+                } else {
+                    author = "";
+                }
+            } else {
+                author = "";
+            }
+
+            timestamp = next.closest("abbr");
+            if (timestamp != null) {
+                timestamp = timestamp.getAttribute("title");
+            } else {
+                timestamp = "";
+            }
+
+            button = document.createElement("button");
+            button.innerHTML = "E-mail";
+            button.className = "post2EmailButton";
+            button.setAttribute("fb2_email_timestamp", timestamp);
+            button.setAttribute("fb2_email_author", author);
+            button.setAttribute("fb2_email_content", content);
+            button.onclick = function () {
+                showModal();
+                $("#fb2email_res").html(
+                    "On " + this.getAttribute("fb2_email_timestamp") + ", " + 
+                    this.getAttribute("fb2_email_author") + " wrote:<br />" + 
+                    this.getAttribute("fb2_email_content")
+                );
+            };
+            but.appendChild(button);
+        } 
+    }
+}
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    var res;
+    var response;
+    var postData;
+
+    var name = message.name;
     var timestamp = message.timestamp;
     // Convert timestamp to Facebook format
     // e.g. 2016-03-26T08:00 -> Saturday, March 26, 2016 at 8:00am
@@ -14,21 +160,22 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     var hour = parseInt(time[4]);
     var minute = time[5];
     var meridian = (hour >= 12) ? "pm" : "am";
+
     hour = (hour > 12) ? (hour - 12) : hour;
     timestamp = day + ", " + month + " " + date + ", " + year + " at " +
         hour + ":" + minute + meridian;
 
-    var res = {
+    res = {
         isValid: false,
         content: "",
         time: timestamp
     };
 
-    var response = {
+    response = {
         poster: name,
         date: timestamp
     };
-    var postData = fetchPost(response);
+    postData = fetchPost(response);
     res.isValid = postData.isValid;
     res.content = postData.content;
     sendResponse(res);
@@ -47,6 +194,7 @@ function fetchPost(oPost) {
         isValid: false,
         content: ""
     };
+    var curDiv;
 
     if (div.length == 0) {
         res.content = "Post not found: no such post author exists";
@@ -58,7 +206,7 @@ function fetchPost(oPost) {
         console.log(div.length + " posts from same author: " +
             "finding by date...");
         for (i = 0; i < div.length; i++) {
-            var curDiv = div.get(i);
+            curDiv = div.get(i);
             if (curDiv.querySelectorAll(dateSelector).length == 1) {
                 divContent = curDiv.querySelectorAll("div.userContent");
                 break;
@@ -117,7 +265,3 @@ function dayInt2Text(index) {
         default: return "";
     }
 }
-
-// TODO: Modify Facebook pages to have interactive popup or button to allow 
-//       users to instantly convert Facebook posts to readable format in 
-//       e-mail.

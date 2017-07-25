@@ -74,7 +74,7 @@ function hideModal() {
 }
 
 function addConvertButtons() {
-    var divs = $("div.userContentWrapper");
+    var divs = $("div.fbUserContent");
     var i;
     var next;
     var content;
@@ -83,6 +83,7 @@ function addConvertButtons() {
     var timestamp;
     var but;
     var button;
+    var email_msg;
 
     for (i = 0; i < divs.length; i++) {
         next = divs[i].querySelector("span.timestampContent");
@@ -92,7 +93,7 @@ function addConvertButtons() {
                 continue;
             }
 
-            contentWrapper = next.closest("div.userContentWrapper");
+            contentWrapper = next.closest("div.fbUserContent");
             if (contentWrapper != null) {
                 content = contentWrapper.querySelector("div.userContent");
                 if (content != null) {
@@ -130,15 +131,25 @@ function addConvertButtons() {
             button.setAttribute("fb2_email_content", content);
             button.onclick = function () {
                 showModal();
-                $("#fb2email_res").html(
-                    "On " + this.getAttribute("fb2_email_timestamp") + ", " + 
-                    this.getAttribute("fb2_email_author") + " wrote:<br />" + 
-                    this.getAttribute("fb2_email_content")
-                );
+                email_msg = "On " + this.getAttribute("fb2_email_timestamp") +
+                     ", " + this.getAttribute("fb2_email_author") + 
+                     " wrote:<br />" + this.getAttribute("fb2_email_content");
+                $("#fb2email_res").html(email_msg);
+                email_msg = encodeURIComponent(html2PlainText(email_msg));
+                //window.open('mailto:?body=' + email_msg);
             };
             but.appendChild(button);
         } 
     }
+}
+
+function html2PlainText(sHtmlMsg) {
+    var plaintext = sHtmlMsg;
+
+    plaintext = plaintext.replace(/<\/.*>/g, '');      // Remove all end tags
+    plaintext = plaintext.replace(/<br \/>|<br>|<p>/g, '\r\n');
+
+    return plaintext;
 }
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
@@ -185,7 +196,7 @@ function fetchPost(oPost) {
     var i;
     var content, container;
     var divSelector =
-        "div.userContentWrapper:has(\"span a:contains('" + oPost.poster +
+        "div.fbUserContent:has(\"span a:contains('" + oPost.poster +
         "')\")";
     var div = $(divSelector);
     var divContent = div.find("div.userContent");

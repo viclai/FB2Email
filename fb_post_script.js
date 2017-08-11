@@ -74,7 +74,7 @@ function hideModal() {
 }
 
 function addConvertButtons() {
-    var divs = $("div.fbUserContent");
+    var divs = $("div.fbUserPost");
     var i;
     var next;
     var content;
@@ -85,15 +85,16 @@ function addConvertButtons() {
     var button;
     var email_msg;
 
-    for (i = 0; i < divs.length; i++) {
-        next = divs[i].querySelector("span.timestampContent");
+    divs.each(function(i, div) {
+        next = div.querySelector("span.timestampContent");
         if (next != null) {
             but = next.closest("div");
-            if (but != null && but.lastChild != null && but.lastChild.nodeName == "BUTTON") {
-                continue;
+            if (but != null && but.lastChild != null &&
+                but.lastChild.nodeName == "BUTTON") {
+                return;
             }
 
-            contentWrapper = next.closest("div.fbUserContent");
+            contentWrapper = next.closest("div.fbUserPost");
             if (contentWrapper != null) {
                 content = contentWrapper.querySelector("div.userContent");
                 if (content != null) {
@@ -139,8 +140,8 @@ function addConvertButtons() {
                 //window.open('mailto:?body=' + email_msg);
             };
             but.appendChild(button);
-        } 
-    }
+        }
+    });
 }
 
 function html2PlainText(sHtmlMsg) {
@@ -196,7 +197,7 @@ function fetchPost(oPost) {
     var i;
     var content, container;
     var divSelector =
-        "div.fbUserContent:has(\"span a:contains('" + oPost.poster +
+        "div.fbUserPost:has(\"span a:contains('" + oPost.poster +
         "')\")";
     var div = $(divSelector);
     var divContent = div.find("div.userContent");

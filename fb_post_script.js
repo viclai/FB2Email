@@ -1,3 +1,6 @@
+/********************************************************************
+ * Startup code
+ ********************************************************************/
 createModal();
 $("#fb2email_blackout").hide();
 $("#fb2email_result_box").hide();
@@ -6,12 +9,59 @@ setInterval(function() {
     addConvertButtons();
 }, 2000);
 
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    var res;
+    var response;
+    var postData;
+
+    var name = message.name;
+    var timestamp = message.timestamp;
+    // Convert timestamp to Facebook format
+    // e.g. 2016-03-26T08:00 -> Saturday, March 26, 2016 at 8:00am
+    var d = new Date(timestamp);
+    var day = dayInt2Text(d.getDay());
+    var timeRegEx = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/g;
+    var time = timeRegEx.exec(timestamp);
+    var year = parseInt(time[1]);
+    var month = monthInt2Text(parseInt(time[2]));
+    var date = parseInt(time[3]);
+    var hour = parseInt(time[4]);
+    var minute = time[5];
+    var meridian = (hour >= 12) ? "pm" : "am";
+
+    hour = (hour > 12) ? (hour - 12) : hour;
+    timestamp = day + ", " + month + " " + date + ", " + year + " at " +
+        hour + ":" + minute + meridian;
+
+    res = {
+        isValid: false,
+        content: "",
+        time: timestamp
+    };
+
+    response = {
+        poster: name,
+        date: timestamp
+    };
+    postData = fetchPost(response);
+    res.isValid = postData.isValid;
+    res.content = postData.content;
+    sendResponse(res);
+});
+
+/********************************************************************
+ * Modal Functions
+ ********************************************************************/
 function createModal() {
     var blackout = document.createElement("div");
     var result_box = document.createElement("div");
     var instr = document.createElement("div");
     var br = document.createElement("br");
     var res = document.createElement("div");
+    var copy = document.createElement("div");
+    var copyButtonWrapper = document.createElement("div");
+    var copyButton = document.createElement("button");
+    var copiedMsg = document.createElement("div");
 
     blackout.id = "fb2email_blackout";
     blackout.style.position = "fixed";
@@ -30,11 +80,41 @@ function createModal() {
 
     instr.id = "fb2email_instr";
     instr.innerHTML = "<b>Copy and paste the following into your e-mail!</b>";
+    instr.style.margin = "0 0 5px 0";
     result_box.appendChild(instr);
+
+    copy.style.overflow = "hidden";
+    copy.style.width = "100%";
+    copy.style.margin = "0 0 5px 0";
+
+    copyButtonWrapper.style.cssFloat = "left";
+    copyButtonWrapper.style.width = "25%";
+
+    copyButton.innerHTML = "Copy to Clipboard";
+    copyButton.onclick = function () {
+        selectText("#fb2email_res");
+        document.execCommand('copy');
+        if (document.selection) {
+            document.selection.empty();
+        } else if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+        document.getElementById("fb2email_copied").style.visibility = "visible";
+        document.getElementById("fb2email_copied").style.display = "initial";
+    };
+    copyButtonWrapper.appendChild(copyButton);
+    copy.appendChild(copyButtonWrapper);
+
+    copiedMsg.style.visibility = "hidden";
+    copiedMsg.id = "fb2email_copied";
+    copiedMsg.innerHTML = "<b>Copied successfully!</b>";
+    copy.appendChild(copiedMsg);
+
+    result_box.appendChild(copy);
 
     result_box.appendChild(br);
 
-    res.id = "fb2email_res";
+    res.id = "fb2email_res"; // This is where the content will be located
     result_box.appendChild(res);
 
     document.body.appendChild(result_box);
@@ -42,6 +122,7 @@ function createModal() {
     $("#fb2email_result_box").css("width", "600px");
     $("#fb2email_result_box").css("height", "180px");
     $("#fb2email_result_box").css("background", "#E0F3FF");
+    $("#fb2email_res").css("background", "white");
     $("#fb2email_result_box").css("left", "50%");
     $("#fb2email_result_box").css("top", "50%");
     $("#fb2email_result_box").css("border-radius", "5px");
@@ -55,6 +136,7 @@ function createModal() {
 function showModal() {
     $("#fb2email_blackout").show();
     $("#fb2email_result_box").show();
+    $("#fb2email_copied").hide();
 
     $("#fb2email_blackout").click(function() {
         hideModal();
@@ -73,6 +155,9 @@ function hideModal() {
     $("#fb2email_res").html("");
 }
 
+/********************************************************************
+ * Main Parsing Functions
+ ********************************************************************/
 function addConvertButtons() {
     var divs = $("div.fbUserPost");
     var i;
@@ -144,55 +229,6 @@ function addConvertButtons() {
     });
 }
 
-function html2PlainText(sHtmlMsg) {
-    var plaintext = sHtmlMsg;
-
-    plaintext = plaintext.replace(/<\/.*>/g, '');      // Remove all end tags
-    plaintext = plaintext.replace(/<br \/>|<br>|<p>/g, '\r\n');
-
-    return plaintext;
-}
-
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    var res;
-    var response;
-    var postData;
-
-    var name = message.name;
-    var timestamp = message.timestamp;
-    // Convert timestamp to Facebook format
-    // e.g. 2016-03-26T08:00 -> Saturday, March 26, 2016 at 8:00am
-    var d = new Date(timestamp);
-    var day = dayInt2Text(d.getDay());
-    var timeRegEx = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/g;
-    var time = timeRegEx.exec(timestamp);
-    var year = parseInt(time[1]);
-    var month = monthInt2Text(parseInt(time[2]));
-    var date = parseInt(time[3]);
-    var hour = parseInt(time[4]);
-    var minute = time[5];
-    var meridian = (hour >= 12) ? "pm" : "am";
-
-    hour = (hour > 12) ? (hour - 12) : hour;
-    timestamp = day + ", " + month + " " + date + ", " + year + " at " +
-        hour + ":" + minute + meridian;
-
-    res = {
-        isValid: false,
-        content: "",
-        time: timestamp
-    };
-
-    response = {
-        poster: name,
-        date: timestamp
-    };
-    postData = fetchPost(response);
-    res.isValid = postData.isValid;
-    res.content = postData.content;
-    sendResponse(res);
-});
-
 function fetchPost(oPost) {
     var i;
     var content, container;
@@ -245,6 +281,36 @@ function fetchPost(oPost) {
     res.isValid = true;
     console.log("Content:\n" + res.content);
     return res;
+}
+
+/********************************************************************
+ * Utility Functions
+ ********************************************************************/
+ function selectText(sElement) {
+    var range;
+    var selection;
+    var element = $(sElement).get(0);
+
+    if (document.body.createTextRange) {
+        range = document.body.createTextRange();
+        range.moveToElementText(element);
+        range.select();
+    } else if (window.getSelection) {
+        selection = window.getSelection();
+        range = document.createRange();
+        range.selectNodeContents(element);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+}
+
+function html2PlainText(sHtmlMsg) {
+    var plaintext = sHtmlMsg;
+
+    plaintext = plaintext.replace(/<\/.*>/g, '');      // Remove all end tags
+    plaintext = plaintext.replace(/<br \/>|<br>|<p>/g, '\r\n');
+
+    return plaintext;
 }
 
 function monthInt2Text(index) {

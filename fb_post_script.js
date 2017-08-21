@@ -92,6 +92,7 @@ function createModal() {
 
     copyButton.innerHTML = "Copy to Clipboard";
     copyButton.onclick = function () {
+        $("#fb2email_res").css("background", "white");
         selectText("#fb2email_res");
         document.execCommand('copy');
         if (document.selection) {
@@ -101,6 +102,7 @@ function createModal() {
         }
         document.getElementById("fb2email_copied").style.visibility = "visible";
         document.getElementById("fb2email_copied").style.display = "initial";
+        $("#fb2email_res").css("background", "#E0F3FF");
     };
     copyButtonWrapper.appendChild(copyButton);
     copy.appendChild(copyButtonWrapper);
@@ -122,7 +124,6 @@ function createModal() {
     $("#fb2email_result_box").css("width", "600px");
     $("#fb2email_result_box").css("height", "180px");
     $("#fb2email_result_box").css("background", "#E0F3FF");
-    $("#fb2email_res").css("background", "white");
     $("#fb2email_result_box").css("left", "50%");
     $("#fb2email_result_box").css("top", "50%");
     $("#fb2email_result_box").css("border-radius", "5px");
@@ -169,6 +170,9 @@ function addConvertButtons() {
     var but;
     var button;
     var email_msg;
+    var imageMedia = null;
+    var tmp;
+    var link = null;
 
     divs.each(function(i, div) {
         next = div.querySelector("span.timestampContent");
@@ -183,7 +187,26 @@ function addConvertButtons() {
             if (contentWrapper != null) {
                 content = contentWrapper.querySelector("div.userContent");
                 if (content != null) {
+                    // Extract images from next sibling of div.userContent
+                    if (content.nextSibling) {
+                        imageMedia = content.nextSibling.querySelector("img");
+                        if (imageMedia) {
+                            // TODO: Overlay image with play button if video
+                            imageMedia = imageMedia.outerHTML;
+                            tmp = $('<div></div>');
+                            tmp.html(imageMedia);
+                            $("img", tmp).attr("class", "");
+                            $("img", tmp).attr("style", "");
+                            // Scale down size
+                            $("img", tmp).attr("width", "30%");
+                            $("img", tmp).attr("height", "30%");
+                            imageMedia = tmp.html();
+                        }
+                    }
+
                     content = content.innerHTML;
+                    if (imageMedia)
+                        content += "<br />" + imageMedia;
                 } else {
                     content = "";
                 }
@@ -204,10 +227,21 @@ function addConvertButtons() {
 
             timestamp = next.closest("abbr");
             if (timestamp != null) {
+                // Get post link from parent a tag of abbr
+                link = timestamp.parentNode;
+                if (link && link.tagName == "A") {
+                    link = link.href;
+                    content += "<br /><a href='" + link +
+                        "' target='_blank'>View Full Post</a>";
+                }
                 timestamp = timestamp.getAttribute("title");
             } else {
                 timestamp = "";
             }
+
+            content += "<br />--Conversion by " + 
+                "<a href='https://github.com/viclai/FB2Email' " +
+                "target='_blank'>FB2Email</a>";
 
             button = document.createElement("button");
             button.innerHTML = "E-mail";
@@ -222,7 +256,6 @@ function addConvertButtons() {
                      " wrote:<br />" + this.getAttribute("fb2_email_content");
                 $("#fb2email_res").html(email_msg);
                 email_msg = encodeURIComponent(html2PlainText(email_msg));
-                //window.open('mailto:?body=' + email_msg);
             };
             but.appendChild(button);
         }

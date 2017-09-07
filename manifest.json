@@ -11,13 +11,13 @@
         "default_popup": "popup.html"
     },
     "background": {
-        "scripts": ["eventPage.js"],
+        "scripts": ["event_page.js"],
         "persistent": false
     },
     "content_scripts": [
         {
             "matches": ["https://www.facebook.com/*"],
-            "js": ["jquery-3.1.1.min.js", "fb_post_script.js"]
+            "js": ["jquery-3.2.1.min.js", "fb_post_script.js"]
         }
     ],
     "permissions": [

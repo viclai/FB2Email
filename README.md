@@ -39,11 +39,11 @@ The following is a list of ideas for features to implement.
 - [x] Manually indicate post to convert in popup.
 - [x] Email button placed next to basic posts
 - [x] Basic text supported in conversions
-- [] Long posts (with *See More*) supported in conversions
-- [] Links supported in conversions
-- [] Media objects (i.e. videos, images, albums) supported in conversions
-- [] E-mail button placed next to a post within a post (possibly a post shared by someone else)
-- [] Deprecate feature to make conversion in popup page.
+- [ ] Long posts (with *See More*) supported in conversions
+- [ ] Links supported in conversions
+- [ ] Media objects (i.e. videos, images, albums) supported in conversions
+- [ ] E-mail button placed next to a post within a post (possibly a post shared by someone else)
+- [ ] Deprecate feature to make conversion in popup page.
 
 If you have an idea that's not listed, please make a feature request by
 creating a new issue.
